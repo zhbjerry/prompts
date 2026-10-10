@@ -38,7 +38,7 @@
 直接改 `prompts.json` 容易写错格式，用本地管理后台可视化增删改：
 
 ```bash
-node make/admin/server.js          # 默认 http://localhost:8787
+make admin                         # 等价于 node make/admin/server.js，默认 http://localhost:8787
 ```
 
 - 左侧列表可搜索、按来源 / 分类 / 图片视频筛选，带封面缩略图（点击可放大），支持勾选批量删除
@@ -143,6 +143,7 @@ python3 make/merge_gpt_image2_prompts.py --source ~/Downloads/awesome-gpt-image2
 - `images/` —— 效果图与参考图（统一顺序编号，见 `make/normalize-images.js`）
 - `make/` —— 合并第三方来源数据、下载/压缩图片等维护脚本，`make/validate_json.js` 校验全部 JSON
 - `make/admin/` —— 本地提示词管理后台（增删改 + 图片上传 + 校验 + 孤儿图片清理）
+- `Makefile` —— 维护命令入口，`make help` 列出全部 node 命令（校验、图片整理、迁移等）
 - `.github/workflows/validate-json.yml` —— 提交时自动校验 JSON
 - `privacy.html` —— 隐私政策
 - `LICENSE` —— MIT License 与第三方说明
