@@ -130,7 +130,7 @@ node make/admin/server.js          # 默认 http://localhost:8787
 python3 make/merge_gpt_image2_prompts.py --source ~/Downloads/awesome-gpt-image2-prompts-main
 ```
 
-效果图存放在 `images/banana/`（自有提示词）和 `images/gpt-image2/`（第三方来源）。
+效果图与参考图统一平铺存放在 `images/`，文件名为 `img-0001` 起始的顺序编号（同一条记录的多张图用 `_2`、`_3` 后缀保持相邻，不含来源信息）。新增图片后执行 `node make/normalize-images.js`，会自动打平子目录、统一改名并回填 `prompts.json` 里的图片地址。
 
 ## 📁 文件说明
 
@@ -140,7 +140,7 @@ python3 make/merge_gpt_image2_prompts.py --source ~/Downloads/awesome-gpt-image2
 - `config.json` —— 扩展与脚本共用的站点注入选择器和公告
 - `extension/` —— Chrome 扩展源码
 - `script.user.js` —— 油猴脚本，与扩展共用 `config.json` 和 `prompts.json`
-- `images/` —— 效果图与参考图
+- `images/` —— 效果图与参考图（统一顺序编号，见 `make/normalize-images.js`）
 - `make/` —— 合并第三方来源数据、下载/压缩图片等维护脚本，`make/validate_json.js` 校验全部 JSON
 - `make/admin/` —— 本地提示词管理后台（增删改 + 图片上传 + 校验 + 孤儿图片清理）
 - `.github/workflows/validate-json.yml` —— 提交时自动校验 JSON

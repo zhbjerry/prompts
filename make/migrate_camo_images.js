@@ -2,7 +2,7 @@
 /**
  * 将 prompts.json 中所有 camo.githubusercontent.com 预览图迁移为本地图片。
  *
- * 流程：camo URL -> 解码原始 URL -> 下载 -> sips 压缩 (小体积) -> 存 images/banana/ -> 改写 coverUrl
+ * 流程：camo URL -> 解码原始 URL -> 下载 -> sips 压缩 (小体积) -> 存 images/ -> 改写 coverUrl
  *
  * 用法：
  *   node make/migrate_camo_images.js          # 正式执行
@@ -17,9 +17,9 @@ const { execSync } = require('child_process');
 
 const DRY = process.argv.includes('--dry');
 const ROOT = path.join(__dirname, '..');
-const IMAGES_DIR = path.join(ROOT, 'images', 'banana');
+const IMAGES_DIR = path.join(ROOT, 'images');
 const PROMPTS_FILE = path.join(ROOT, 'prompts.json');
-const CDN_PREFIX = 'https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/';
+const CDN_PREFIX = 'https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/';
 
 // 压缩目标：预览缩略图，尽量小
 const MAX_WIDTH = 720;      // 最长边

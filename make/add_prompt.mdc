@@ -32,7 +32,7 @@
         "titleEn": "Paper to Professor Whiteboard",
         "prompt": "将这个论文转换为中文教授白板图片,帮助我理解信息",
         "description": "",
-        "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/paper_to_whiteboard.jpg",
+        "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/img-0001.jpg",
         "referenceImageUrls": [],
         "tags": ["学习", "总结"],
         "author": "@op7418",
@@ -121,6 +121,11 @@
 - `business_portrait.jpg` (商务照)
 - `hairstyle_change.png` (换发型)
 
+新增图片统一保存到 `images/` 根目录（不再使用来源子目录），提交前执行
+`node make/normalize-images.js`：脚本会把 `images/` 下（含任意子目录）的图片
+统一改名为 `img-0001.<ext>` 顺序编号，并回填 `prompts.json` 里的
+`coverUrl` / `referenceImageUrls`。
+
 ---
 
 ## 第二步:更新到 prompts.json
@@ -164,8 +169,8 @@ node make/download_image.js https://example.com/preview.jpg disney_3d_style
 
 1. **下载预览图**: 从来源获取预览图片
 2. **压缩图片**: 将图片压缩到 100KB 以内,保持清晰度
-3. **重命名**: 按照命名规范重命名文件
-4. **保存**: 将图片保存到 `images/banana/` 文件夹
+3. **保存**: 将图片保存到 `images/` 文件夹
+4. **统一编号**: 执行 `node make/normalize-images.js`，自动改名并回填 `prompts.json` 引用
 
 ---
 
@@ -213,7 +218,7 @@ node make/download_image.js https://example.com/preview.jpg disney_3d_style
     "titleEn": "Selfie to Disney 3D Style",
     "prompt": "将自拍照转换成迪士尼3D风格角色",
     "description": "",
-    "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/disney_3d_style.jpg",
+    "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/img-0002.jpg",
     "referenceImageUrls": [],
     "tags": ["生活", "滤镜"],
     "author": "@example_user",

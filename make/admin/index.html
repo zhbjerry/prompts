@@ -383,7 +383,7 @@ function renderEditor() {
                 <button id="btn-fetch-img" type="button">从 coverUrl 下载</button>
                 <input type="file" id="img-file" accept="image/*" hidden>
             </div>
-            <div class="hint">下载后自动压缩并存入 ${esc(S.sourceBuckets[form.sourceId] || 'images/banana')}/，coverUrl 自动回填 CDN 地址。</div>
+            <div class="hint">下载后自动压缩并存入 ${esc(S.sourceBuckets[form.sourceId] || 'images')}/，coverUrl 自动回填 CDN 地址。</div>
         </div>
         <div class="field full"><label>referenceImageUrls（每行一个，可选）</label><textarea name="referenceImageUrls" rows="3">${esc((form.referenceImageUrls || []).join('\n'))}</textarea></div>
         <div class="field full" id="ref-preview"></div>

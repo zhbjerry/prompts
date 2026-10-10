@@ -30,7 +30,7 @@ SOFTWARE.
 1. **网页 UI** —— `index.html` 的深色主题、分类配色（`CAT_COLORS`）、卡片与弹层布局参考并改编自
    [davidwuw0811-boop/awesome-gpt-image2-prompts](https://github.com/davidwuw0811-boop/awesome-gpt-image2-prompts)（其 README 声明为 MIT License）。
 
-2. **GPT Image 2 提示词数据与效果图** —— `prompts.json` 中 493 条记录和 `images/gpt-image2/` 下 491 张图片来自 awesome-gpt-image2-prompts 及其上游仓库：
+2. **GPT Image 2 提示词数据与效果图** —— `prompts.json` 中 493 条记录和 `images/` 下 491 张图片来自 awesome-gpt-image2-prompts 及其上游仓库：
    - [moosl/awsome-gpt-image-2-prompts](https://github.com/moosl/awsome-gpt-image-2-prompts)
    - [freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2)
    - [nexu-io/open-design](https://github.com/nexu-io/open-design)

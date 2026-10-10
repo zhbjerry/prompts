@@ -31,11 +31,11 @@ const SOURCE_HOMEPAGES = {
     'awesome-gpt-image2-prompts': 'https://github.com/davidwuw0811-boop/awesome-gpt-image2-prompts'
 };
 const SOURCE_BUCKETS = {
-    'banana-prompt-quicker': 'images/banana',
-    'freestylefly-gpt-image-2': 'images/gpt-image2',
-    'moosl-awesome-gpt-image-2-prompts': 'images/gpt-image2',
-    'open-design': 'images/gpt-image2',
-    'awesome-gpt-image2-prompts': 'images/gpt-image2'
+    'banana-prompt-quicker': 'images',
+    'freestylefly-gpt-image-2': 'images',
+    'moosl-awesome-gpt-image-2-prompts': 'images',
+    'open-design': 'images',
+    'awesome-gpt-image2-prompts': 'images'
 };
 const RECORD_KEYS = [
     'id', 'sourceId', 'title', 'titleEn', 'prompt', 'description', 'coverUrl',
@@ -231,7 +231,7 @@ function compressWithSips(inputPath, outputPath) {
 }
 
 async function saveImage({ url, dataUrl, name, sourceId }) {
-    const bucket = SOURCE_BUCKETS[sourceId] || 'images/banana';
+    const bucket = SOURCE_BUCKETS[sourceId] || 'images';
     const dir = path.join(ROOT, bucket);
     fs.mkdirSync(dir, { recursive: true });
 

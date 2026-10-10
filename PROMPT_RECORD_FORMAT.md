@@ -63,7 +63,7 @@
   "titleEn": "Black & White Portrait Art",
   "prompt": "A high-resolution black-and-white portrait artwork…",
   "description": "Can replace Harry Potter with any character name.",
-  "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/gpt-image2/2.png",
+  "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/img-0001.png",
   "referenceImageUrls": [],
   "tags": ["人像/角色"],
   "author": "@ZHO_ZHO_ZHO",
@@ -87,9 +87,9 @@
   "titleEn": "Apple-Style Poster",
   "prompt": "充分参考图片的设计风格，配色等，为如下内容生成苹果风格的海报：\n\n…",
   "description": "",
-  "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/apple.png",
+  "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/img-0002.png",
   "referenceImageUrls": [
-    "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/apple_ref1.jpg"
+    "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/img-0002_2.jpg"
   ],
   "tags": ["工作", "海报"],
   "author": "Official",

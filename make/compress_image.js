@@ -67,7 +67,7 @@ function main() {
         console.log('  node compress_image.js example.jpg 200  # 压缩到 200KB');
         console.log('');
         console.log('说明:');
-        console.log('  - 图片名称是 images/banana 目录下的文件名');
+        console.log('  - 图片名称是 images 目录下的文件名');
         console.log('  - 输出会覆盖原文件（转为 jpg 格式）');
         process.exit(1);
     }
@@ -76,19 +76,19 @@ function main() {
     const targetSizeKB = parseInt(args[1]) || 400;
 
     // 构建图片路径
-    const imagesDir = path.join(__dirname, '..', 'images', 'banana');
+    const imagesDir = path.join(__dirname, '..', 'images');
     const inputPath = path.join(imagesDir, imageName);
 
     // 检查文件是否存在
     if (!fs.existsSync(inputPath)) {
         console.error(`❌ 错误: 文件不存在 - ${inputPath}`);
         console.log('');
-        console.log('📂 images/banana 目录下的文件:');
+        console.log('📂 images 目录下的文件:');
         try {
             const files = fs.readdirSync(imagesDir);
             files.forEach(f => console.log(`   - ${f}`));
         } catch (e) {
-            console.log('   (images/banana 目录不存在)');
+            console.log('   (images 目录不存在)');
         }
         process.exit(1);
     }
@@ -135,14 +135,14 @@ function main() {
         console.log('');
         console.log('═'.repeat(40));
         console.log(`✅ 压缩完成!`);
-        console.log(`   文件: images/banana/${baseName}.jpg`);
+        console.log(`   文件: images/${baseName}.jpg`);
         console.log(`   尺寸: ${result.finalWidth} x ${result.finalHeight}`);
         console.log(`   大小: ${(finalSize / 1024).toFixed(2)} KB`);
         console.log(`   压缩率: ${compressionRatio}%`);
         console.log('═'.repeat(40));
 
         // 复制 CDN URL 到剪贴板
-        const cdnUrl = `https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/${baseName}.jpg`;
+        const cdnUrl = `https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/${baseName}.jpg`;
         console.log(`\n📋 CDN: ${cdnUrl}`);
 
         try {

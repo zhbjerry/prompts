@@ -6,7 +6,7 @@
     python3 make/merge_gpt_image2_prompts.py [--source <目录>] [--dry-run]
 
 做了什么：
-  1. 把源项目的 images/* 复制到本项目的 images/gpt-image2/（幂等，按大小跳过）
+  1. 把源项目的 images/* 复制到本项目的 images/（平铺；幂等，按大小跳过）
   2. 把源项目的提示词转成 registry Prompt Record v1 + 本仓库扩展键，追加到
      prompts.json 末尾；已合并过的条目按 sourceItemId / prompt 文本去重
 
@@ -39,7 +39,7 @@ import sys
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEFAULT_SOURCE = os.path.join(os.path.expanduser("~"), "Downloads/awesome-gpt-image2-prompts-main")
 CDN_ROOT = "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/"
-IMAGE_SUBDIR = "images/gpt-image2"
+IMAGE_SUBDIR = "images"
 BASE_SOURCE_ID = "banana-prompt-quicker"
 
 SOURCE_IDS = {

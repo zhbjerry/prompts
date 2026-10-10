@@ -114,7 +114,7 @@ async function main() {
         fs.writeFileSync(tempPath, buffer);
 
         // 3. 准备输出路径
-        const imagesDir = path.join(__dirname, '..', 'images', 'banana');
+        const imagesDir = path.join(__dirname, '..', 'images');
         if (!fs.existsSync(imagesDir)) {
             fs.mkdirSync(imagesDir, { recursive: true });
         }
@@ -129,9 +129,9 @@ async function main() {
 
         // 6. 结果
         const finalSize = (fs.statSync(outputPath).size / 1024).toFixed(2);
-        console.log(`\n✅ 已保存: images/banana/${filename}.jpg (${finalSize} KB)`);
+        console.log(`\n✅ 已保存: images/${filename}.jpg (${finalSize} KB)`);
 
-        const cdnUrl = `https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/${filename}.jpg`;
+        const cdnUrl = `https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/${filename}.jpg`;
         console.log(`📋 CDN: ${cdnUrl}`);
 
         try {
