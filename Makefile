@@ -15,10 +15,7 @@ NAME  ?=
 
 .DEFAULT_GOAL := help
 
-.PHONY: help validate normalize normalize-dry admin download compress \
-        migrate-twimg migrate-twimg-dry migrate-twimg-force \
-        migrate-camo migrate-camo-dry \
-        migrate-source-item-id migrate-source-item-id-dry
+.PHONY: help validate normalize normalize-dry admin download compress
 
 help:
 	@echo "项目维护命令："
@@ -32,15 +29,6 @@ help:
 	@echo ""
 	@echo "  本地服务"
 	@echo "    make admin [PORT=$(PORT)]               启动本地提示词管理后台"
-	@echo ""
-	@echo "  一次性迁移"
-	@echo "    make migrate-twimg                    迁移 pbs.twimg.com 预览图到本地"
-	@echo "    make migrate-twimg-dry                同上，仅预览（--dry）"
-	@echo "    make migrate-twimg-force              同上，已存在的本地图也重新下载（--force）"
-	@echo "    make migrate-camo                     迁移 camo 预览图到本地"
-	@echo "    make migrate-camo-dry                 同上，仅预览（--dry）"
-	@echo "    make migrate-source-item-id           回填自有条目的 sourceItemId"
-	@echo "    make migrate-source-item-id-dry       同上，仅预览（--dry-run）"
 
 validate:
 	$(NODE) make/validate_json.js
@@ -61,25 +49,3 @@ download:
 compress:
 	@test -n "$(NAME)" || { echo "用法: make compress NAME=<文件名> [SIZE=目标KB]"; exit 1; }
 	$(NODE) make/compress_image.js "$(NAME)" $(SIZE)
-
-migrate-twimg:
-	$(NODE) make/migrate_twimg_images.js
-
-migrate-twimg-dry:
-	$(NODE) make/migrate_twimg_images.js --dry
-
-migrate-twimg-force:
-	$(NODE) make/migrate_twimg_images.js --force
-
-migrate-camo:
-	$(NODE) make/migrate_camo_images.js
-
-migrate-camo-dry:
-	$(NODE) make/migrate_camo_images.js --dry
-
-migrate-source-item-id:
-	$(NODE) make/migrate_own_source_item_id.js
-
-migrate-source-item-id-dry:
-	$(NODE) make/migrate_own_source_item_id.js --dry-run
-
