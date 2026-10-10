@@ -1,0 +1,24 @@
+name: Validate JSON
+
+on:
+  push:
+    paths:
+      - '**.json'
+      - 'make/validate_json.js'
+      - '.github/workflows/validate-json.yml'
+  pull_request:
+    paths:
+      - '**.json'
+      - 'make/validate_json.js'
+      - '.github/workflows/validate-json.yml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Validate all JSON files
+        run: node make/validate_json.js

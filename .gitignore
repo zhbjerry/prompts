@@ -1,0 +1,30 @@
+# Obsidian 个人配置
+.obsidian
+
+# Claudian 会话数据
+.claudian
+
+*.pem
+extension.zip
+docs/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# 提示词管理服务的本地状态
+make/admin/.state.json
+
+# Dependencies
+node_modules/
+vendor/
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# OS generated files
+.DS_Store
+Thumbs.db

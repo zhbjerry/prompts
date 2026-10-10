@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🍌 提示词管理</title>
+<style>
+    :root { color-scheme: dark; --bg:#0d1117; --panel:#161b22; --border:#30363d; --text:#e6edf3; --muted:#8b949e; --accent:#2f81f7; --danger:#f85149; --ok:#3fb950; }
+    * { box-sizing: border-box; }
+    html, body { height:100%; }
+    body { margin:0; font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC",sans-serif; background:var(--bg); color:var(--text); display:flex; flex-direction:column; overflow:hidden; }
+    /* 深色滚动条 */
+    * { scrollbar-width: thin; scrollbar-color: #363c45 transparent; }
+    ::-webkit-scrollbar { width:10px; height:10px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:#363c45; border-radius:6px; border:2px solid transparent; background-clip:content-box; }
+    ::-webkit-scrollbar-thumb:hover { background:#4b5563; background-clip:content-box; }
+    ::-webkit-scrollbar-corner { background:transparent; }
+    header { flex:none; display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--border); background:var(--bg); z-index:5; flex-wrap:wrap; }
+    header h1 { font-size:16px; margin:0; flex:1; }
+    button { background:var(--panel); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:6px 12px; cursor:pointer; font-size:13px; }
+    button:hover { border-color:var(--accent); }
+    button.primary { background:var(--accent); border-color:var(--accent); color:#fff; }
+    button.danger { color:var(--danger); }
+    button.danger:not(:disabled) { border-color:#6e2b28; }
+    button:disabled { opacity:.45; cursor:default; }
+    input, select, textarea { background:var(--bg); color:var(--text); border:1px solid var(--border); border-radius:6px; padding:6px 8px; font:inherit; width:100%; }
+    input:focus, select:focus, textarea:focus { outline:none; border-color:var(--accent); }
+    input[type=checkbox] { width:auto; accent-color:var(--accent); }
+    .row { display:flex; gap:8px; align-items:center; }
+    .filterbar { flex:none; display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:8px 16px; border-bottom:1px solid var(--border); background:var(--panel); z-index:4; }
+    .filterbar #q { flex:1 1 240px; min-width:180px; }
+    .filterbar select { width:auto; min-width:130px; }
+    .filterbar .grow { flex:1; }
+    .selcount { color:var(--muted); font-size:12px; white-space:nowrap; }
+    main { flex:1; min-height:0; display:grid; grid-template-columns:400px 1fr; }
+    main > * { min-height:0; }
+    @media (max-width: 980px) {
+        main { grid-template-columns:1fr; grid-template-rows:minmax(0,1fr); }
+        body:not(.batch-mode) main { grid-template-rows:minmax(0,1fr) minmax(0,1fr); }
+        aside { border-right:none; }
+        section.editor { border-top:1px solid var(--border); }
+    }
+    body.batch-mode main { grid-template-columns:1fr; }
+    body.batch-mode #sidebar, body.batch-mode #editor { display:none; }
+    aside { border-right:1px solid var(--border); display:flex; flex-direction:column; min-height:0; }
+    .list { overflow:auto; flex:1; }
+    .item { display:flex; gap:10px; align-items:flex-start; padding:8px 12px; border-bottom:1px solid var(--border); cursor:pointer; }
+    .item:hover { background:var(--panel); }
+    .item.active { background:#1f2d3d; box-shadow:inset 3px 0 0 var(--accent); }
+    .item.selected { background:#17263a; }
+    .item .t { font-weight:600; }
+    .item .m { color:var(--muted); font-size:12px; display:flex; gap:8px; margin-top:2px; flex-wrap:wrap; }
+    .item .meta { min-width:0; flex:1; }
+    .tag { border:1px solid var(--border); border-radius:10px; padding:0 6px; font-size:11px; }
+    .thumb { width:72px; height:72px; object-fit:cover; border-radius:6px; border:1px solid var(--border); background:#0d1117; flex:none; cursor:zoom-in; }
+    .thumb.blank { display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:11px; cursor:default; }
+    section.editor { overflow:auto; padding:16px 20px; }
+    .grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .field { display:grid; gap:4px; }
+    .field.full { grid-column:1 / -1; }
+    label { color:var(--muted); font-size:12px; }
+    textarea { resize:vertical; min-height:90px; font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+    .hint { color:var(--muted); font-size:12px; }
+    .previews { display:flex; gap:8px; flex-wrap:wrap; }
+    .previews img { width:150px; height:auto; max-height:150px; object-fit:contain; border:1px solid var(--border); border-radius:8px; background:#0d1117; }
+    .actions { display:flex; gap:8px; align-items:center; margin-top:16px; flex-wrap:wrap; }
+    /* 批量模式 */
+    .batch { overflow:auto; padding:12px; display:none; }
+    body.batch-mode .batch { display:block; }
+    #batchgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
+    .card { position:relative; border:1px solid var(--border); border-radius:10px; overflow:hidden; background:var(--panel); cursor:pointer; user-select:none; }
+    .card:hover { border-color:#4b5563; }
+    .card.sel { border-color:var(--accent); box-shadow:0 0 0 2px var(--accent); }
+    .card .imgwrap { aspect-ratio:1 / 1; background:#0d1117; display:flex; align-items:center; justify-content:center; }
+    .card .imgwrap img { width:100%; height:100%; object-fit:cover; display:block; }
+    .card .cap { padding:6px 8px; }
+    .card .cap .t { font-size:12px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card .cap .s { font-size:11px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .card .check { position:absolute; top:6px; left:6px; width:22px; height:22px; border-radius:5px; border:1px solid var(--border); background:rgba(13,17,23,.8); display:flex; align-items:center; justify-content:center; font-size:13px; color:transparent; }
+    .card.sel .check { background:var(--accent); border-color:var(--accent); color:#fff; }
+    .marquee { position:fixed; border:1px solid var(--accent); background:rgba(47,129,247,.18); pointer-events:none; z-index:15; display:none; }
+    #toast { position:fixed; right:16px; bottom:16px; max-width:520px; background:var(--panel); border:1px solid var(--border); border-left:4px solid var(--accent); border-radius:6px; padding:10px 14px; white-space:pre-wrap; display:none; z-index:20; }
+    #toast.ok { border-left-color:var(--ok); }
+    #toast.err { border-left-color:var(--danger); }
+    .empty { color:var(--muted); padding:24px; text-align:center; }
+    #lightbox { position:fixed; inset:0; background:rgba(0,0,0,.85); display:none; align-items:center; justify-content:center; z-index:30; cursor:zoom-out; }
+    #lightbox img { max-width:92vw; max-height:92vh; object-fit:contain; }
+</style>
+</head>
+<body>
+<header>
+    <h1>🍌 提示词管理</h1>
+    <span class="hint" id="status">加载中…</span>
+    <button id="btn-batch">批量模式</button>
+    <button id="btn-validate">校验 JSON</button>
+    <button id="btn-gc">孤儿图片</button>
+    <button id="btn-reload">重新加载</button>
+    <button id="btn-new" class="primary">新建</button>
+</header>
+<div class="filterbar">
+    <input id="q" placeholder="搜索标题 / 正文 / 作者…">
+    <select id="f-source"><option value="">全部来源</option></select>
+    <select id="f-media"><option value="">全部类型</option><option value="image">图片</option><option value="video">视频</option></select>
+    <select id="f-cat"><option value="">全部分类</option></select>
+    <span class="grow"></span>
+    <label class="row" style="gap:6px;white-space:nowrap"><input type="checkbox" id="pick-all"> 全选当前结果</label>
+    <span class="selcount" id="selcount">已选 0 条</span>
+    <button id="btn-invert-sel">反选</button>
+    <button id="btn-clear-sel">清空选择</button>
+    <button class="danger" id="btn-batch-del" disabled>删除选中</button>
+</div>
+<main>
+    <aside id="sidebar">
+        <div class="list" id="list"></div>
+    </aside>
+    <section class="editor" id="editor"><div class="empty">从左侧选择一条，或点「新建」</div></section>
+    <section class="batch" id="batch">
+        <div id="batchgrid"></div>
+        <div class="empty" id="batchempty" style="display:none">没有匹配的记录</div>
+    </section>
+</main>
+<div class="marquee" id="marquee"></div>
+<div id="lightbox"><img alt=""></div>
+<div id="toast"></div>
+<script>
+const $ = (s) => document.querySelector(s);
+const PLACEHOLDER = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect width="100" height="100" fill="#161b22"/><text x="50" y="56" font-size="12" fill="#8b949e" text-anchor="middle">无图</text></svg>');
+let S = null, currentId = null, creating = false, form = null, batchMode = false;
+const selected = new Set();
+
+function toast(msg, kind) {
+    const el = $('#toast');
+    el.textContent = msg;
+    el.className = kind || '';
+    el.style.display = 'block';
+    clearTimeout(el._t);
+    el._t = setTimeout(() => { el.style.display = 'none'; }, kind === 'err' ? 9000 : 4000);
+}
+
+async function api(method, url, body) {
+    const res = await fetch(url, { method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.ok === false) throw new Error(data.error || data.message || `HTTP ${res.status}`);
+    return data;
+}
+
+// CDN 地址换成同源路径，本地图片不用走 CDN；外部地址原样使用
+function previewUrl(u) {
+    if (!u) return '';
+    const i = u.indexOf('/images/');
+    return i !== -1 ? u.slice(i) : u;
+}
+const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+async function loadState() {
+    S = await api('GET', '/api/state');
+    for (const id of [...selected]) if (!S.records.some((r) => r.id === id)) selected.delete(id);
+    $('#f-source').innerHTML = '<option value="">全部来源</option>' + S.sourceIds.map((s) => `<option value="${s}">${s}</option>`).join('');
+    const counts = new Map();
+    for (const r of S.records) counts.set(r.tags[0] || '(无)', (counts.get(r.tags[0] || '(无)') || 0) + 1);
+    const cats = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+    $('#f-cat').innerHTML = '<option value="">全部分类</option>' + cats.map(([c, n]) => `<option value="${c}">${c} (${n})</option>`).join('');
+    $('#status').textContent = `共 ${S.records.length} 条 · 自有序号下一个 ${S.nextOwnItemId}`;
+    render();
+}
+
+function filtered() {
+    const q = $('#q').value.trim().toLowerCase();
+    const source = $('#f-source').value;
+    const media = $('#f-media').value;
+    const cat = $('#f-cat').value;
+    return S.records.filter((r) => {
+        if (source && r.sourceId !== source) return false;
+        if (media && r.mediaType !== media) return false;
+        if (cat && (r.tags[0] || '(无)') !== cat) return false;
+        if (q) {
+            const hay = [r.title, r.titleEn, r.prompt, r.author, r.description, ...(r.tags || [])].join('\n').toLowerCase();
+            if (!hay.includes(q)) return false;
+        }
+        return true;
+    });
+}
+
+function render() { if (batchMode) renderGrid(); else renderList(); updateSelbar(); }
+
+function renderList() {
+    const rows = filtered();
+    const list = $('#list');
+    if (!rows.length) { list.innerHTML = '<div class="empty">没有匹配的记录</div>'; return; }
+    list.innerHTML = rows.map((r) => {
+        const src = previewUrl(r.coverUrl);
+        const thumb = src
+            ? `<img class="thumb" loading="lazy" decoding="async" src="${esc(src)}" data-full="${esc(src)}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'thumb blank',textContent:'无图'}))">`
+            : '<div class="thumb blank">无图</div>';
+        return `<div class="item ${r.id === currentId ? 'active' : ''} ${selected.has(r.id) ? 'selected' : ''}" data-id="${esc(r.id)}">
+            <input type="checkbox" class="pick" data-id="${esc(r.id)}" ${selected.has(r.id) ? 'checked' : ''}>
+            ${thumb}
+            <div class="meta">
+                <div class="t">${esc(r.title)}</div>
+                <div class="m"><span>${esc(r.titleEn)}</span></div>
+                <div class="m"><span class="tag">${esc(r.tags[0] || '')}</span>${r.tags[1] ? `<span class="tag">${esc(r.tags[1])}</span>` : ''}<span>${esc(r.sourceId)}</span><span>${r.mediaType}</span>${r.needsRef ? '<span>需参考图</span>' : ''}</div>
+            </div>
+        </div>`;
+    }).join('');
+    list.querySelectorAll('.item').forEach((el) => {
+        el.onclick = (e) => {
+            const pick = e.target.closest('.pick');
+            if (pick) { e.stopPropagation(); setSelected(pick.dataset.id, pick.checked); return; }
+            const img = e.target.closest('.thumb[data-full]');
+            if (img) { e.stopPropagation(); openLightbox(img.dataset.full); return; }
+            openRecord(el.dataset.id);
+        };
+    });
+}
+
+function renderGrid() {
+    const rows = filtered();
+    $('#batchempty').style.display = rows.length ? 'none' : 'block';
+    $('#batchgrid').innerHTML = rows.map((r) => {
+        const src = previewUrl(r.coverUrl);
+        const img = src
+            ? `<img loading="lazy" decoding="async" src="${esc(src)}" draggable="false" onerror="this.style.visibility='hidden'">`
+            : `<span class="hint">无图</span>`;
+        return `<div class="card ${selected.has(r.id) ? 'sel' : ''}" data-id="${esc(r.id)}">
+            <div class="check">✓</div>
+            <div class="imgwrap">${img}</div>
+            <div class="cap"><div class="t">${esc(r.title)}</div><div class="s">${esc(r.tags[0] || '')} · ${esc(r.sourceId)}</div></div>
+        </div>`;
+    }).join('');
+}
+
+function openLightbox(src) { $('#lightbox img').src = src; $('#lightbox').style.display = 'flex'; }
+$('#lightbox').onclick = () => { $('#lightbox').style.display = 'none'; };
+
+function setSelected(id, on) {
+    if (on) selected.add(id); else selected.delete(id);
+    paintSelection();
+    updateSelbar();
+}
+
+// 只更新选中样式，不整表重绘（框选时高频调用）
+function paintSelection() {
+    document.querySelectorAll('.card[data-id]').forEach((el) => el.classList.toggle('sel', selected.has(el.dataset.id)));
+    document.querySelectorAll('.item[data-id]').forEach((el) => {
+        const on = selected.has(el.dataset.id);
+        el.classList.toggle('selected', on);
+        const pick = el.querySelector('.pick');
+        if (pick) pick.checked = on;
+    });
+}
+
+function updateSelbar() {
+    $('#selcount').textContent = `已选 ${selected.size} 条`;
+    const btn = $('#btn-batch-del');
+    btn.disabled = selected.size === 0;
+    btn.textContent = selected.size ? `删除选中 (${selected.size})` : '删除选中';
+    const rows = S ? filtered() : [];
+    const picked = rows.filter((r) => selected.has(r.id)).length;
+    const all = $('#pick-all');
+    all.checked = rows.length > 0 && picked === rows.length;
+    all.indeterminate = picked > 0 && picked < rows.length;
+}
+
+function setBatchMode(on) {
+    batchMode = on;
+    document.body.classList.toggle('batch-mode', on);
+    $('#btn-batch').textContent = on ? '退出批量' : '批量模式';
+    $('#btn-batch').classList.toggle('primary', on);
+    render();
+}
+
+// ---------- 框选 ----------
+
+let drag = null;
+const marquee = $('#marquee');
+
+$('#batch').addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    if (e.target.closest('a,button,input,select')) return;
+    drag = {
+        x0: e.clientX, y0: e.clientY, moved: false,
+        card: e.target.closest('.card'),
+        additive: e.shiftKey || e.metaKey || e.ctrlKey,
+        base: new Set(selected),
+        rects: [...document.querySelectorAll('.card[data-id]')].map((el) => ({ id: el.dataset.id, rect: el.getBoundingClientRect() }))
+    };
+    e.preventDefault();
+});
+
+window.addEventListener('mousemove', (e) => {
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.x0, e.clientY - drag.y0) < 5) return;
+    drag.moved = true;
+    const rect = { left: Math.min(drag.x0, e.clientX), top: Math.min(drag.y0, e.clientY), right: Math.max(drag.x0, e.clientX), bottom: Math.max(drag.y0, e.clientY) };
+    marquee.style.display = 'block';
+    marquee.style.left = rect.left + 'px';
+    marquee.style.top = rect.top + 'px';
+    marquee.style.width = (rect.right - rect.left) + 'px';
+    marquee.style.height = (rect.bottom - rect.top) + 'px';
+    const hits = new Set(drag.rects.filter(({ rect: r }) => r.left < rect.right && r.right > rect.left && r.top < rect.bottom && r.bottom > rect.top).map((x) => x.id));
+    selected.clear();
+    if (drag.additive) for (const id of drag.base) selected.add(id);
+    for (const id of hits) selected.add(id);
+    paintSelection();
+    updateSelbar();
+});
+
+window.addEventListener('mouseup', () => {
+    if (!drag) return;
+    const wasDrag = drag.moved;
+    const card = drag.card;
+    drag = null;
+    marquee.style.display = 'none';
+    if (!wasDrag && card) setSelected(card.dataset.id, !selected.has(card.dataset.id));
+});
+
+// ---------- 编辑器 ----------
+
+function catList() {
+    const set = new Set();
+    for (const r of S.records) if (r.tags[0]) set.add(r.tags[0]);
+    return [...set].sort();
+}
+
+const F = {
+    sourceId: (v) => `<select name="sourceId">${S.sourceIds.map((s) => `<option value="${s}" ${s === v ? 'selected' : ''}>${s}</option>`).join('')}</select>`,
+    mediaType: (v) => `<select name="mediaType">${['image', 'video'].map((o) => `<option value="${o}" ${o === v ? 'selected' : ''}>${o}</option>`).join('')}</select>`,
+    imageMode: (v) => `<select name="imageMode">${['generate', 'edit', ''].map((o) => `<option value="${o}" ${o === v ? 'selected' : ''}>${o || '(空)'}</option>`).join('')}</select>`,
+    tags0: (v) => `<input name="tags0" list="cat-list" value="${esc(v)}"><datalist id="cat-list">${catList().map((c) => `<option value="${esc(c)}">`).join('')}</datalist>`
+};
+
+function openRecord(id) {
+    if (batchMode) { setSelected(id, !selected.has(id)); return; }
+    creating = false;
+    currentId = id;
+    form = JSON.parse(JSON.stringify(S.records.find((x) => x.id === id)));
+    renderEditor();
+    renderList();
+    updateSelbar();
+}
+
+function newRecord() {
+    if (batchMode) setBatchMode(false);
+    creating = true;
+    currentId = null;
+    form = {
+        id: '', sourceId: S.ownSourceIds[0], title: '', titleEn: '', prompt: '', description: '',
+        coverUrl: '', referenceImageUrls: [], tags: [], author: '', sourceUrl: '', createdAt: new Date().toISOString().slice(0, 10),
+        mediaType: 'image', imageMode: 'generate', imageModel: '', needsRef: false, sourceItemId: S.nextOwnItemId
+    };
+    renderEditor();
+    renderList();
+    updateSelbar();
+}
+
+function renderEditor() {
+    const isOwn = S.ownSourceIds.includes(form.sourceId);
+    const ed = $('#editor');
+    ed.innerHTML = `
+    <div class="grid">
+        <div class="field"><label>id（自动生成，只读）</label><input value="${esc(form.id)}" readonly></div>
+        <div class="field"><label>sourceItemId（稳定标识）</label><input name="sourceItemId" type="number" min="1" value="${esc(form.sourceItemId)}"></div>
+        <div class="field"><label>sourceId（来源）</label>${F.sourceId(form.sourceId)}</div>
+        <div class="field"><label>author（作者）</label><input name="author" value="${esc(form.author)}" placeholder="@用户名 / Official"></div>
+        <div class="field full"><label>title（中文标题，必填）</label><input name="title" value="${esc(form.title)}"></div>
+        <div class="field full"><label>titleEn（英文副标题，必填）</label><input name="titleEn" value="${esc(form.titleEn)}"></div>
+        <div class="field full"><label>prompt（正文）</label><textarea name="prompt" rows="10">${esc(form.prompt)}</textarea></div>
+        <div class="field full"><label>description（使用说明，可选）</label><textarea name="description" rows="3">${esc(form.description)}</textarea></div>
+        <div class="field"><label>tags[0] 主分类</label>${F.tags0(form.tags[0] || '')}</div>
+        <div class="field"><label>tags[1] 二级分类（可选）</label><input name="tags1" value="${esc(form.tags[1] || '')}"></div>
+        <div class="field"><label>mediaType</label>${F.mediaType(form.mediaType)}</div>
+        <div class="field"><label>imageMode</label>${F.imageMode(form.imageMode)}</div>
+        <div class="field"><label>imageModel</label><input name="imageModel" value="${esc(form.imageModel)}"></div>
+        <div class="field"><label>createdAt</label><input name="createdAt" value="${esc(form.createdAt)}" placeholder="2026-01-06T14:40:05+08:00 或 2026-01-06"></div>
+        <div class="field full"><label>sourceUrl</label><input name="sourceUrl" value="${esc(form.sourceUrl)}" placeholder="留空自动回落到来源主页"></div>
+        <div class="field full"><label>封面预览</label><div class="previews" id="cover-preview"></div></div>
+        <div class="field full"><label>coverUrl（效果图）</label><input name="coverUrl" value="${esc(form.coverUrl)}"></div>
+        <div class="field full"><label>上传 / 下载封面</label>
+            <div class="row">
+                <input type="text" id="img-name" placeholder="文件名（小写字母数字下划线，可留空自动生成）">
+                <button id="btn-upload-img" type="button">选本地图片</button>
+                <button id="btn-fetch-img" type="button">从 coverUrl 下载</button>
+                <input type="file" id="img-file" accept="image/*" hidden>
+            </div>
+            <div class="hint">下载后自动压缩并存入 ${esc(S.sourceBuckets[form.sourceId] || 'images/banana')}/，coverUrl 自动回填 CDN 地址。</div>
+        </div>
+        <div class="field full"><label>referenceImageUrls（每行一个，可选）</label><textarea name="referenceImageUrls" rows="3">${esc((form.referenceImageUrls || []).join('\n'))}</textarea></div>
+        <div class="field full" id="ref-preview"></div>
+        <div class="field full"><label><input type="checkbox" name="needsRef" ${form.needsRef ? 'checked' : ''}> needsRef（需要用户上传参考图）</label></div>
+    </div>
+    <div class="actions">
+        <button class="primary" id="btn-save">${creating ? '创建' : '保存'}</button>
+        ${creating ? '' : '<button class="danger" id="btn-delete">删除</button>'}
+        <span class="hint">${isOwn ? '自有条目：sourceItemId 只增不减，删除后不复用。' : '第三方条目：sourceItemId 为上游条目 id。'}</span>
+    </div>`;
+
+    ed.querySelectorAll('input[name], select[name], textarea[name]').forEach((el) => {
+        el.oninput = () => { collect(); refreshPreviews(); };
+        el.onchange = () => {
+            if (el.name === 'sourceId') { collect(); renderEditor(); return; }
+            collect();
+        };
+    });
+    refreshPreviews();
+    $('#btn-save').onclick = save;
+    const del = $('#btn-delete');
+    if (del) del.onclick = remove;
+    $('#btn-upload-img').onclick = () => $('#img-file').click();
+    $('#img-file').onchange = uploadImage;
+    $('#btn-fetch-img').onclick = fetchImage;
+}
+
+function refreshPreviews() {
+    const cover = $('#cover-preview');
+    if (cover) cover.innerHTML = form.coverUrl ? `<img src="${esc(previewUrl(form.coverUrl))}" data-full="${esc(previewUrl(form.coverUrl))}" title="封面">` : '<span class="hint">暂无封面</span>';
+    const refs = (form.referenceImageUrls || []).map(previewUrl).filter(Boolean);
+    const refBox = $('#ref-preview');
+    if (refBox) refBox.innerHTML = refs.length ? `<label>参考图预览</label><div class="previews">${refs.map((src) => `<img src="${esc(src)}" data-full="${esc(src)}">`).join('')}</div>` : '';
+    document.querySelectorAll('#editor img[data-full]').forEach((img) => { img.onclick = () => openLightbox(img.dataset.full); });
+}
+
+function readField(name) {
+    const el = document.querySelector(`#editor [name="${name}"]`);
+    return el ? el.value : '';
+}
+
+function collect() {
+    form.sourceId = readField('sourceId');
+    form.sourceItemId = Number(readField('sourceItemId')) || null;
+    form.author = readField('author');
+    form.title = readField('title');
+    form.titleEn = readField('titleEn');
+    form.prompt = readField('prompt');
+    form.description = readField('description');
+    form.imageModel = readField('imageModel');
+    form.createdAt = readField('createdAt');
+    form.sourceUrl = readField('sourceUrl');
+    form.coverUrl = readField('coverUrl');
+    form.tags = [readField('tags0'), readField('tags1')].filter(Boolean);
+    form.mediaType = readField('mediaType');
+    form.imageMode = readField('imageMode');
+    form.referenceImageUrls = readField('referenceImageUrls').split('\n').map((s) => s.trim()).filter(Boolean);
+    const el = document.querySelector('#editor [name="needsRef"]');
+    form.needsRef = el ? el.checked : false;
+}
+
+async function save() {
+    collect();
+    try {
+        if (creating) {
+            const res = await api('POST', '/api/records', form);
+            currentId = res.record.id;
+            creating = false;
+            await loadState();
+            openRecord(currentId);
+            toast('已创建 ' + currentId, 'ok');
+        } else {
+            const res = await api('PUT', '/api/records', { ...form, id: currentId });
+            currentId = res.record.id;
+            await loadState();
+            openRecord(currentId);
+            toast(res.idChanged ? '已保存（id 随 sourceItemId 变化，旧收藏会失配）' : '已保存', 'ok');
+        }
+    } catch (e) { toast('保存失败：' + e.message, 'err'); }
+}
+
+async function remove() {
+    if (!confirm('确认删除这条记录？只改 JSON，对应图片不会被删除。')) return;
+    try {
+        await api('DELETE', '/api/records?id=' + encodeURIComponent(currentId));
+        selected.delete(currentId);
+        currentId = null; form = null;
+        await loadState();
+        $('#editor').innerHTML = '<div class="empty">已删除，从左侧选择下一条</div>';
+        toast('已删除', 'ok');
+    } catch (e) { toast('删除失败：' + e.message, 'err'); }
+}
+
+async function batchDelete() {
+    const ids = [...selected];
+    if (!ids.length) { toast('先勾选或框选要删除的记录', 'err'); return; }
+    if (!confirm(`确认删除选中的 ${ids.length} 条记录？只改 JSON，对应图片不会被删除。`)) return;
+    try {
+        const res = await api('POST', '/api/records/batch-delete', { ids });
+        const removedSet = new Set(ids);
+        selected.clear();
+        if (currentId && removedSet.has(currentId)) {
+            currentId = null; form = null;
+            $('#editor').innerHTML = '<div class="empty">已删除，从左侧选择下一条</div>';
+        }
+        await loadState();
+        toast(`已删除 ${res.removed} 条`, 'ok');
+    } catch (e) { toast('批量删除失败：' + e.message, 'err'); }
+}
+
+async function callImage(body) {
+    const name = $('#img-name').value.trim();
+    const res = await api('POST', '/api/images', { ...body, name: name || undefined, sourceId: readField('sourceId') });
+    form.coverUrl = res.cdnUrl;
+    const input = document.querySelector('#editor [name="coverUrl"]');
+    if (input) input.value = res.cdnUrl;
+    refreshPreviews();
+    toast(`已保存 ${res.relPath}（${res.sizeKB} KB${res.compressed ? '，已压缩' : ''}）`, 'ok');
+}
+
+function uploadImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => callImage({ dataUrl: reader.result, name: $('#img-name').value.trim() || file.name }).catch((err) => toast('上传失败：' + err.message, 'err'));
+    reader.readAsDataURL(file);
+}
+
+async function fetchImage() {
+    const url = readField('coverUrl').trim();
+    if (!url) { toast('先填 coverUrl，再点下载', 'err'); return; }
+    try { await callImage({ url }); } catch (e) { toast('下载失败：' + e.message, 'err'); }
+}
+
+$('#btn-new').onclick = newRecord;
+$('#btn-batch').onclick = () => setBatchMode(!batchMode);
+$('#q').oninput = render;
+$('#f-source').onchange = render;
+$('#f-media').onchange = render;
+$('#f-cat').onchange = render;
+$('#pick-all').onchange = (e) => {
+    for (const r of filtered()) { if (e.target.checked) selected.add(r.id); else selected.delete(r.id); }
+    paintSelection();
+    updateSelbar();
+};
+$('#btn-invert-sel').onclick = () => {
+    const rows = filtered();
+    if (!rows.length) { toast('当前筛选结果为空，无法反选', 'err'); return; }
+    for (const r of rows) { if (selected.has(r.id)) selected.delete(r.id); else selected.add(r.id); }
+    paintSelection();
+    updateSelbar();
+};
+$('#btn-clear-sel').onclick = () => { selected.clear(); paintSelection(); updateSelbar(); };
+$('#btn-batch-del').onclick = batchDelete;
+$('#btn-reload').onclick = async () => { try { await api('POST', '/api/reload'); await loadState(); toast('已从磁盘重新加载', 'ok'); } catch (e) { toast(e.message, 'err'); } };
+$('#btn-validate').onclick = async () => {
+    try { const r = await api('POST', '/api/validate'); toast(r.message, 'ok'); }
+    catch (e) { toast(e.message, 'err'); }
+};
+$('#btn-gc').onclick = async () => {
+    try {
+        const r = await api('POST', '/api/gc', { dryRun: true });
+        if (!r.count) { toast('没有孤儿图片', 'ok'); return; }
+        if (!confirm(`发现 ${r.count} 个未被任何记录引用的图片：\n${r.orphans.join('\n')}\n\n确认删除？`)) return;
+        const done = await api('POST', '/api/gc', { dryRun: false });
+        toast(`已删除 ${done.count} 个孤儿图片`, 'ok');
+    } catch (e) { toast(e.message, 'err'); }
+};
+
+loadState().catch((e) => toast('加载失败：' + e.message, 'err'));
+</script>
+</body>
+</html>

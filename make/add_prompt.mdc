@@ -1,0 +1,228 @@
+# 任务目标
+
+从所给信息中提取提示词,并更新到 `prompts.json` 文件中。
+
+---
+
+## 工作流程
+
+### 第零步:获取信息内容
+
+**如果所给信息是 URL(一个或多个):**
+- 使用 `https://r.jina.ai/{url}` 格式获取网页内容
+- 例如:如果用户提供 `https://example.com/prompts`,则访问 `https://r.jina.ai/https://example.com/prompts`
+- Jina AI Reader 会将网页转换为易于阅读的 Markdown格式
+
+**如果所给信息是文本:**
+- 直接使用提供的文本内容
+
+---
+
+### 第一步:提取提示词
+
+⚠️ **重要提醒:一个来源可能包含多个提示词,请仔细检查,不要遗漏任何一个!**
+
+从所给信息中识别并提取**所有**提示词,按照以下 JSON 格式整理:
+
+```json
+[
+    {
+        "sourceId": "banana-prompt-quicker",
+        "title": "论文转教授白板板书(中英转换)",
+        "titleEn": "Paper to Professor Whiteboard",
+        "prompt": "将这个论文转换为中文教授白板图片,帮助我理解信息",
+        "description": "",
+        "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/paper_to_whiteboard.jpg",
+        "referenceImageUrls": [],
+        "tags": ["学习", "总结"],
+        "author": "@op7418",
+        "sourceUrl": "https://x.com/op7418/status/1991806419948253508",
+        "createdAt": "2025-12-08T21:30:00+08:00",
+        "mediaType": "image",
+        "imageMode": "generate",
+        "imageModel": "",
+        "needsRef": false,
+        "sourceItemId": 285
+    }
+]
+```
+
+> 自有条目的 `sourceItemId` 是稳定条目标识，取当前自有条目里的最大值加一（只增不减，删除后不复用）；上面的 `285` 只是示例。用 `node make/admin/server.js` 新增时由工具自动分配。
+```
+
+---
+
+## 字段定义与约束
+
+记录格式为 registry Prompt Record v1，完整契约见仓库根目录的 `PROMPT_RECORD_FORMAT.md`。没有值的字段一律写 `""` 或 `[]`，禁止写 `null`，也不要写规范之外的键。
+
+### 必填字段
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| `sourceId` | string | 来源标识 | 本仓库自有条目固定为 `banana-prompt-quicker` |
+| `title` | string | 提示词标题 | 单行中文，10-30 字，能准确概括功能；必须含汉字 |
+| `titleEn` | string | 英文副标题 | 必填非空，只能写英文（不含汉字） |
+| `prompt` | string | 实际提示词内容 | 多行用 `\n` 连接，保留段落空行；其他语言翻译成同等格式的中文 |
+| `description` | string | 使用说明 | 没有就写 `""`；英文副标题不要写这里，放扩展键 `titleEn` |
+| `coverUrl` | string | 效果预览图 | CDN 绝对地址，没有就写 `""` |
+| `referenceImageUrls` | string[] | 参考图 | 没有就写 `[]` |
+| `tags` | string[] | 分类标签 | 第一个是主分类，第二个是可选二级分类；`主分类 - 二级分类` 要拆成两个元素 |
+| `author` | string | 作者信息 | 格式：`@用户名` 或 `平台@用户名` 或 `Official` |
+| `sourceUrl` | string | 来源链接 | 完整 URL；没有来源时写来源主页 |
+| `createdAt` | string | 收录时间 | RFC 3339；不确定就用 `date` 命令取值，实在没有写 `""` |
+| `mediaType` | string | 媒体类型 | 只能是 `image`（产出图片）或 `video`（产出视频），必填 |
+| `imageMode` | string | 生成模式 | 只能是 `generate`（文生图）或 `edit`（编辑图片） |
+| `imageModel` | string | 上游模型标识 | 没有就写 `""` |
+| `needsRef` | boolean | 需要用户上传参考图 | 没有就写 `false` |
+| `sourceItemId` | integer | 稳定条目标识 | 自有条目写本仓库分配的正整数序号（当前最大 +1，只增不减）；第三方条目写上游条目 id |
+
+### 维护者补齐字段
+
+| 字段 | 类型 | 说明 | 约束 |
+|------|------|------|------|
+| `id` | string | 稳定标识 | `<sourceId>:<sha256(sourceItemId)[:16]>`；由管理工具按 `sourceItemId` 计算，写入后不再改动 |
+| `createdAt` | string | 收录时间 | 提取者无法确定时留空，由维护者补齐 |
+
+`imageSize`、`imageCount` 没有数据，整键省略。
+
+`titleEn`、`mediaType`、`needsRef`、`sourceItemId` 是本仓库在 v1 之上补的扩展键，每条记录都要写；`mediaType` 必填 `image` 或 `video`，`sourceItemId` 必填正整数，其余缺省值是上表里的 `""`、`false`。
+
+## 分类说明
+
+### 主分类（`tags[0]`）标准
+
+- **学习**: 可用于学习教育目的,理解消化知识。例如:拍照解题、概念可视化、生物标本展示图
+- **工作**: 各行业的提效工具。例如:商务照、电商模特试穿、手绘草图转流程图
+- **生活**: 日常生活中会用到的,具有实用性。例如:换发型、换穿搭、智能消除路人、家具软装预览
+- **有趣**: 好玩但不实用,纯创意。例如:时空复现、重生之我是1美元钞票的头头
+
+### `mediaType` 判断标准
+
+- **`image`**: 提示词产出图片/静态图（绝大多数条目）
+- **`video`**: 提示词明确用于视频生成模型，产出视频（如分镜、运镜、短片、动画镜头等）；这类条目的主分类通常是 `视频模板`
+
+### `imageMode` 判断标准
+
+- **`generate`**: 纯文生图,不需要用户上传任何图片
+- **`edit`**: 需要用户上传图片进行编辑、转换、合成等操作
+
+---
+
+## 预览图命名规范
+
+图片文件名应该:
+- 使用英文小写字母和下划线
+- 能够反映提示词的功能
+- 格式:`{功能描述}.jpg` 或 `{功能描述}.png`
+
+示例:
+- `paper_to_whiteboard.jpg` (论文转白板)
+- `business_portrait.jpg` (商务照)
+- `hairstyle_change.png` (换发型)
+
+---
+
+## 第二步:更新到 prompts.json
+
+将提取的提示词放到 `prompts.json` 文件的数组开头
+
+**注意事项:**
+- 字段名必须是 v1 的字段名，不要写 `preview`、`category`、`mode`、`link` 这类旧字段
+- `prompt` 字段可能为多行，需要通过 \n 换行，并保留段落之间的空行
+- 主分类和二级分类放进 `tags` 数组，例如 `["学习", "总结"]`
+- 如果来源把两级分类写成一个字段（`图像模板 - 产品海报`），拆成 `["图像模板", "产品海报"]` 再写入
+- 注意转义问题
+
+---
+
+## 第三步:处理预览图
+
+### 使用自动化脚本 (macOS Only)
+
+使用 `download_image.js` 脚本一键完成下载、压缩、保存 (无需安装任何依赖):
+
+```bash
+node make/download_image.js <预览图URL> [文件名]
+```
+
+**示例:**
+```bash
+# 指定文件名
+node make/download_image.js https://example.com/preview.jpg disney_3d_style
+```
+
+脚本会自动:
+- ✅ 下载图片
+- ✅ 使用 macOS 原生 `sips` 工具压缩
+- ✅ 统一转换为 JPG 格式
+- ✅ 保存并复制 CDN 路径
+
+### 手动处理步骤
+
+如果需要手动处理:
+
+1. **下载预览图**: 从来源获取预览图片
+2. **压缩图片**: 将图片压缩到 100KB 以内,保持清晰度
+3. **重命名**: 按照命名规范重命名文件
+4. **保存**: 将图片保存到 `images/banana/` 文件夹
+
+---
+
+## 边界情况处理
+
+### 信息不完整时
+
+- 如果缺少 `author`,使用 `"Unknown"`
+- 如果没有来源链接,`sourceUrl` 写来源主页 `https://github.com/zhbjerry/prompts`
+- 如果无法判断 `mediaType`,默认 `image`;提示词明确面向视频模型(提到"视频""分镜""运镜""镜头""短片"等)才写 `video`
+- 如果无法判断 `imageMode`,根据提示词内容推断:
+  - 提示词中提到"上传图片"、"图一"、"图二"、"参考图像" → `edit`
+  - 否则 → `generate`
+
+### 多个提示词时
+
+- 每个提示词单独成一个对象
+- 按照原始信息的顺序排列
+- 确保每个对象的字段完整
+
+### 分类不明确时
+
+优先级判断:
+1. 如果涉及学习知识 → `学习`
+2. 如果涉及工作场景 → `工作`
+3. 如果有明确生活应用 → `生活`
+4. 如果纯粹娱乐创意 → `有趣`
+
+---
+
+## 完整示例
+
+**输入信息:**
+```
+来自 @example_user 的提示词:
+"将自拍照转换成迪士尼3D风格角色"
+预览图: https://example.com/preview.jpg
+```
+
+**输出结果:**
+```json
+{
+    "sourceId": "banana-prompt-quicker",
+    "title": "自拍转迪士尼3D风格",
+    "titleEn": "Selfie to Disney 3D Style",
+    "prompt": "将自拍照转换成迪士尼3D风格角色",
+    "description": "",
+    "coverUrl": "https://cdn.jsdelivr.net/gh/zhbjerry/prompts@main/images/banana/disney_3d_style.jpg",
+    "referenceImageUrls": [],
+    "tags": ["生活", "滤镜"],
+    "author": "@example_user",
+    "sourceUrl": "https://github.com/zhbjerry/prompts",
+    "createdAt": "",
+    "mediaType": "image",
+    "imageMode": "edit",
+    "imageModel": "",
+    "needsRef": true,
+    "sourceItemId": 285
+}
+```

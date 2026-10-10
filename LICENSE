@@ -1,0 +1,41 @@
+MIT License
+
+Copyright (c) 2025 glidea
+Copyright (c) 2026 zhbjerry (fork modifications)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+## 第三方说明 / Third-Party Notices
+
+本仓库的 MIT License 只覆盖本项目自有代码。以下第三方内容的版权归各自作者所有，在此说明来源与授权：
+
+1. **网页 UI** —— `index.html` 的深色主题、分类配色（`CAT_COLORS`）、卡片与弹层布局参考并改编自
+   [davidwuw0811-boop/awesome-gpt-image2-prompts](https://github.com/davidwuw0811-boop/awesome-gpt-image2-prompts)（其 README 声明为 MIT License）。
+
+2. **GPT Image 2 提示词数据与效果图** —— `prompts.json` 中 493 条记录和 `images/gpt-image2/` 下 491 张图片来自 awesome-gpt-image2-prompts 及其上游仓库：
+   - [moosl/awsome-gpt-image-2-prompts](https://github.com/moosl/awsome-gpt-image-2-prompts)
+   - [freestylefly/awesome-gpt-image-2](https://github.com/freestylefly/awesome-gpt-image-2)
+   - [nexu-io/open-design](https://github.com/nexu-io/open-design)
+   各条提示词的著作权归原作者，仓库内为每条记录保留了 `author` 与 `sourceUrl` 字段用于署名。
+
+3. **Chrome 扩展本体** —— fork 自 [glidea/banana-prompt-quicker](https://github.com/glidea/banana-prompt-quicker)（MIT License），版权归原作者 [@glidea](https://github.com/glidea) 所有。
+
+如权利人认为上述收录方式不妥，欢迎提 Issue 联系调整或删除。
